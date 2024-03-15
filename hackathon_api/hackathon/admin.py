@@ -3,7 +3,7 @@ from .models import Team, ApiHitCount
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'team_name', 'access_key')
+    list_display = ('id', 'team_name', 'access_key', 'api_code')
 
 @admin.register(ApiHitCount)
 class ApiHitCountAdmin(admin.ModelAdmin):

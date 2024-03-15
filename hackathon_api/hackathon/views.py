@@ -54,11 +54,16 @@ class ApiCodeView(generics.CreateAPIView):
             return Response({'error': 'Access key is required in the Authorization header.'}, status=400)
 
         team = get_object_or_404(Team, access_key=access_key)
+        # Check if the team has an api_code already, if not generate one
+        if not team.api_code:
+            team.api_code = f"PRAYATNA_{uuid.uuid4().hex}"  # Generate unique api_code
+            team.save()
+        
         api_hit_count, created = ApiHitCount.objects.get_or_create(team=team)
 
         # Check if the ApiHitCount was just created or if it needs to be refreshed
         if created or (timezone.now() - api_hit_count.time_refreshed).total_seconds() >= 1800:
-            api_hit_count.api_code = uuid.uuid4()
+            api_hit_count.api_code = team.api_code  # Set api_code to team's api_code
             api_hit_count.time_refreshed = timezone.now()
             api_hit_count.save()
 
