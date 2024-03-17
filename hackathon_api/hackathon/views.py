@@ -7,6 +7,7 @@ from .serializers import TeamSerializer, ApiHitCountSerializer
 import uuid
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core.mail import send_mail
 
 
 class TeamRegistrationView(generics.CreateAPIView):
@@ -17,17 +18,31 @@ class TeamRegistrationView(generics.CreateAPIView):
         # Customize the data to be saved before creating the Team instance
         team_name = self.request.data.get('team_name', '')
         team_members = self.request.data.get('team_members', [])
+        email = self.request.data.get('email', '')
         
         # Generate a UUID for the access key
         access_key = uuid.uuid4()
 
         # Save the Team instance with the generated access key
-        serializer.save(team_name=team_name, team_members=team_members, access_key=access_key)
+        serializer.save(team_name=team_name, team_members=team_members, email=email, access_key=access_key)
+
+        subject = "Prayatna API Access Key"
+        message = f"""This is your access key: {access_key}
+
+Each team must integrate the provided API into their project. 
+The above Access key must be passed in the Authorization header of the API request in the format "Bearer <access_key>". 
+Use the POST method for the specified API URL: http://13.48.136.54:8000/api/api-code/. 
+Upon successful request, you will receive an API code in the response, which must be displayed in the footer of your project.
+"""
+        from_email = "vedantsomani210474@acropolis.in"  # Update with your email
+        recipient_list = [email]
+
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
         # Return the access key in the response
         return Response({'access_key': str(access_key)})
 
-class TeamInfoView(generics.RetrieveAPIView):
+class TeamInfoView(generics.RetrieveAPIView):    
     serializer_class = TeamSerializer
 
     def get_object(self):
